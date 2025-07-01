@@ -2,17 +2,20 @@ package main
 
 import (
 	"blog-go/config"
+	"blog-go/middleware"
 	"blog-go/routes"
 
 	"github.com/labstack/echo/v4"
 )
 
 func main() {
-	config.InitDB()
+	config.ConnectDB()
 
 	e := echo.New()
 
-	routes.Init(e)
+	e.Use(middleware.CORSMiddleware())
+
+	routes.IndexRoutes(e)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

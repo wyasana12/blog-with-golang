@@ -1,6 +1,7 @@
 package config
 
 import (
+	"blog-go/internal/model"
 	"fmt"
 	"log"
 	"os"
@@ -12,8 +13,8 @@ import (
 
 var DB *gorm.DB
 
-func InitDB() {
-	_ = godotenv.Load()
+func ConnectDB() {
+	_ = godotenv.Load(".env")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT"))
 
@@ -23,4 +24,7 @@ func InitDB() {
 	}
 
 	DB = db
+
+	DB.AutoMigrate(&model.User{}, &model.Role{})
+	fmt.Println("Success Connect to Database")
 }
