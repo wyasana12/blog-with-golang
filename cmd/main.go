@@ -10,6 +10,7 @@ import (
 
 func main() {
 	config.ConnectDB()
+	config.Init()
 
 	e := echo.New()
 

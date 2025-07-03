@@ -48,18 +48,3 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		return next(c)
 	}
 }
-
-func RoleMiddleware(requiredRole string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			user := c.Get("user").(*model.User)
-			for _, role := range user.Roles {
-				if role.Name == requiredRole {
-					return next(c)
-				}
-			}
-
-			return c.JSON(http.StatusForbidden, echo.Map{"message": "Forbiden Role Not Allowed"})
-		}
-	}
-}

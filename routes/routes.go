@@ -14,4 +14,6 @@ func IndexRoutes(e *echo.Echo) {
 	})
 
 	AuthRoutes(routes)
+	RoleRoutes(routes)
+	UserRoleRoutes(routes)
 }
