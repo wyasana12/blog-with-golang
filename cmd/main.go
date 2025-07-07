@@ -16,6 +16,9 @@ func main() {
 
 	e.Use(middleware.CORSMiddleware())
 
+	e.File("/api.yaml", "api.yaml")
+	e.Static("/swagger", "swagger-ui")
+
 	routes.IndexRoutes(e)
 
 	e.Logger.Fatal(e.Start(":8080"))

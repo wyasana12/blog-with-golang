@@ -1,0 +1,573 @@
+openapi: 3.0.0
+info:
+  title: Blog-Golang API
+  version: 1.0.0
+  description: Dokumentasi API untuk layanan Blog yang dibangun dengan Go.
+servers:
+  - url: http://localhost:8080
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: John Doe
+        username:
+          type: string
+          example: johndoe123
+        email:
+          type: string
+          format: email
+          example: johndoe@example.com
+        password:
+          type: string
+          format: password
+          example: Password123
+        password_confirm:
+          type: string
+          format: password
+          example: Password123
+      required:
+        - name
+        - username
+        - email
+        - password
+        - password_confirm
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: johndoe123
+        email:
+          type: string
+          format: email
+          example: johndoe@example.com
+        password:
+          type: string
+          format: password
+          example: Password123
+      required:
+        - password
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: John Doe
+            email:
+              type: string
+              example: johndoe@example.com
+            roles:
+              type: array
+              items:
+                type: string
+              example:
+                - author
+    User:
+      type: object
+      properties:
+        ID:
+          type: integer
+        CreatedAt:
+          type: string
+          format: date-time
+        UpdatedAt:
+          type: string
+          format: date-time
+        DeletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        name:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+    Role:
+      type: object
+      properties:
+        ID:
+          type: integer
+        CreatedAt:
+          type: string
+          format: date-time
+        UpdatedAt:
+          type: string
+          format: date-time
+        DeletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        name:
+          type: string
+    CreateRoleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: admin
+      required:
+        - name
+    AssignRoleRequest:
+      type: object
+      properties:
+        role:
+          type: string
+          example: admin
+      required:
+        - role
+    PostRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: My First Post
+        content:
+          type: string
+          example: This is the content of my first post.
+        status:
+          type: string
+          enum:
+            - draft
+            - published
+          example: published
+      required:
+        - title
+        - content
+        - status
+    PostResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        status:
+          type: string
+        published_at:
+          type: string
+          format: date-time
+        author:
+          $ref: '#/components/schemas/AuthorInfo'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    AuthorInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        error:
+          type: string
+          nullable: true
+tags:
+  - name: Ping
+    description: Operations to check service health
+  - name: Auth
+    description: Authentication operations
+  - name: Roles
+    description: Role management (Superadmin access)
+  - name: UserRole
+    description: Assigning and revoking user roles (Superadmin access)
+  - name: Post
+    description: Public post operations
+  - name: My Post
+    description: Authenticated user's post operations
+paths:
+  /ping:
+    get:
+      tags:
+        - Ping
+      summary: Check service status
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: ping
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      requestBody:
+        description: User registration details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registration Success
+        '400':
+          description: Bad Request (Invalid Input, Password Mismatch, Validation Failed, Email In Use)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: User login
+      requestBody:
+        description: User login credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Unauthorized (Invalid Email or Password)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Get current user's profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+  /api/role:
+    get:
+      tags:
+        - Roles
+      summary: Get all roles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+    post:
+      tags:
+        - Roles
+      summary: Create a new role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleRequest'
+      responses:
+        '201':
+          description: Role created successfully
+        '400':
+          description: Bad Request (Name already in use, Validation failed)
+  /api/role/{id}:
+    put:
+      tags:
+        - Roles
+      summary: Update a role by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleRequest'
+      responses:
+        '200':
+          description: Role updated successfully
+        '404':
+          description: Role Not Found
+    delete:
+      tags:
+        - Roles
+      summary: Delete a role by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Role deleted successfully
+        '500':
+          description: Failed to delete role
+  /api/users/{id}/roles/sync:
+    post:
+      tags:
+        - UserRole
+      summary: Assign a role to a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRoleRequest'
+      responses:
+        '200':
+          description: Role assigned successfully
+        '404':
+          description: User or Role not found
+        '409':
+          description: User already has this role
+  /api/users/{id}/roles/{roleId}:
+    delete:
+      tags:
+        - UserRole
+      summary: Revoke a role from a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Role revoked successfully
+        '404':
+          description: User or Role not found
+  /api/post:
+    get:
+      tags:
+        - Post
+      summary: Get all published posts
+      responses:
+        '200':
+          description: A list of published posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostResponse'
+  /api/post/{id}:
+    get:
+      tags:
+        - Post
+      summary: Get detail of a published post by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '500':
+          description: Failed to fetch detail post
+  /api/{username}/posts:
+    get:
+      tags:
+        - Post
+      summary: Get all published posts by a username
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of user's published posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostResponse'
+        '404':
+          description: User Not Found
+  /api/user/post:
+    get:
+      tags:
+        - My Post
+      summary: Get all posts created by the authenticated user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - draft
+              - published
+      responses:
+        '200':
+          description: A list of my posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostResponse'
+    post:
+      tags:
+        - My Post
+      summary: Create a new post
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostRequest'
+      responses:
+        '201':
+          description: Post created successfully
+        '400':
+          description: Bad Request (Validation failed)
+  /api/user/post/{id}:
+    get:
+      tags:
+        - My Post
+      summary: Get detail of my post by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '500':
+          description: Failed to fetch my detail post
+    put:
+      tags:
+        - My Post
+      summary: Update my post by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostRequest'
+      responses:
+        '200':
+          description: Post updated successfully
+        '403':
+          description: Forbidden, you are not the owner
+        '404':
+          description: Post Not Found
+    delete:
+      tags:
+        - My Post
+      summary: Delete my post by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post deleted successfully
+        '403':
+          description: Forbidden, you are not the owner
+        '404':
+          description: Post Not Found
