@@ -35,6 +35,7 @@ func Register(c echo.Context) error {
 
 	user := model.User{
 		Name:     req.Name,
+		Username: req.Username,
 		Email:    req.Email,
 		Password: hash,
 	}
@@ -61,7 +62,7 @@ func Login(c echo.Context) error {
 	}
 
 	var user model.User
-	if err := config.DB.Preload("Roles").Where("email = ?", req.Email).First(&user).Error; err != nil {
+	if err := config.DB.Preload("Roles").Where("email = ? OR username = ?", req.Email, req.Username).First(&user).Error; err != nil {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"message": "Email Is Not Valid"})
 	}
 

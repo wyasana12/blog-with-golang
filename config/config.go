@@ -27,7 +27,7 @@ func ConnectDB() {
 
 	DB = db
 
-	DB.AutoMigrate(&model.User{}, &model.Role{})
+	DB.AutoMigrate(&model.User{}, &model.Role{}, &model.Post{})
 	fmt.Println("Success Connect to Database")
 }
 
