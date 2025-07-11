@@ -14,4 +14,6 @@ type Post struct {
 	PublishedAt *time.Time `json:"published_at"`
 	AuthorID    uint       `json:"author_id"`
 	Author      User       `gorm:"foreignKey:AuthorID"`
+	Likes       []Like     `json:"likes,omitempty"`
+	Comments    []Comment  `json:"comments,omitempty"`
 }

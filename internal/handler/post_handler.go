@@ -16,8 +16,8 @@ func mapToPostResponse(post model.Post) dto.PostResponse {
 		Content:     post.Content,
 		PublishedAt: post.PublishedAt,
 		Author: dto.AuthorInfo{
-			ID:   post.Author.ID,
-			Name: post.Author.Name,
+			ID:       post.Author.ID,
+			Username: post.Author.Username,
 		},
 		CreatedAt: post.CreatedAt,
 		UpdatedAt: post.UpdatedAt,
