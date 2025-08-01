@@ -25,6 +25,16 @@ func mapToCommentResponse(comment model.Comment) dto.CommentResponse {
 func GetAllCommentByIdPost(c echo.Context) error {
 	postID := c.Param("id")
 
+	var post model.Post
+
+	if err := config.DB.First(&post, postID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"message": "Post Not found"})
+	}
+
+	if post.DisableComments {
+		return c.JSON(http.StatusOK, []dto.CommentResponse{})
+	}
+
 	var comment []model.Comment
 	if err := config.DB.Preload("User").Where("post_id = ?", postID).Order("created_at ASC").Find(&comment).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed To Fetch Comment", "error": err.Error()})
@@ -40,6 +50,16 @@ func GetAllCommentByIdPost(c echo.Context) error {
 
 func CreateComment(c echo.Context) error {
 	postID, _ := strconv.Atoi(c.Param("id"))
+
+	var post model.Post
+
+	if err := config.DB.First(&post, postID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"message": "Post Not Found"})
+	}
+
+	if post.DisableComments {
+		return c.JSON(http.StatusForbidden, echo.Map{"message": "Comments Are Disabled For This Post"})
+	}
 
 	var req dto.CommentRequest
 	if err := c.Bind(&req); err != nil {
@@ -74,6 +94,10 @@ func UpdateComment(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, echo.Map{"message": "Comment Not Found"})
 	}
 
+	if comment.Post.DisableComments {
+		return c.JSON(http.StatusForbidden, echo.Map{"message": "Comments Are Disabled For This Post"})
+	}
+
 	if comment.UserID != user.ID {
 		return c.JSON(http.StatusForbidden, echo.Map{"message": "You Can't Edit This Comment"})
 	}
@@ -102,6 +126,10 @@ func DeleteComment(c echo.Context) error {
 	var comment model.Comment
 	if err := config.DB.First(&comment, commentID).Error; err != nil {
 		return c.JSON(http.StatusNotFound, echo.Map{"message": "Comment Not Found"})
+	}
+
+	if comment.Post.DisableComments {
+		return c.JSON(http.StatusForbidden, echo.Map{"message": "Comments Are Disabled For This Post"})
 	}
 
 	if comment.UserID != user.ID {

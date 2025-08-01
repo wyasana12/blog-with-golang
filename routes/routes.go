@@ -18,4 +18,5 @@ func IndexRoutes(e *echo.Echo) {
 	UserRoleRoutes(routes)
 	PostRoutes(routes)
 	CommentRoutes(routes)
+	LikeRoutes(routes)
 }

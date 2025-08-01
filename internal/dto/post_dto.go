@@ -9,12 +9,16 @@ type PostRequest struct {
 }
 
 type PostResponse struct {
-	ID          uint       `json:"id"`
-	Title       string     `json:"title"`
-	Content     string     `json:"content"`
-	Status      string     `json:"status"`
-	PublishedAt *time.Time `json:"published_at,omitempty"`
-	Author      AuthorInfo `json:"author"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	ID              uint       `json:"id"`
+	Title           string     `json:"title"`
+	Content         string     `json:"content"`
+	Status          string     `json:"status"`
+	PublishedAt     *time.Time `json:"published_at,omitempty"`
+	Author          AuthorInfo `json:"author"`
+	DisableComments bool       `json:"disable_comments"`
+	HideLikes       bool       `json:"hide_likes"`
+	LikesCount      int        `json:"likes_count"`
+	CommentsCount   int        `json:"comments_count"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
 }

@@ -15,7 +15,7 @@ func GetAllMyPost(c echo.Context) error {
 	status := c.QueryParam("status")
 
 	var posts []model.Post
-	query := config.DB.Preload("Author").Where("author_id = ?", user.ID)
+	query := config.DB.Preload("Author").Preload("Likes").Preload("Comments").Where("author_id = ?", user.ID)
 
 	if status != "" {
 		query = query.Where("status = ?", status)
@@ -38,7 +38,7 @@ func GetDetailMyPost(c echo.Context) error {
 	id := c.Param("id")
 
 	var post model.Post
-	if err := config.DB.Preload("Author").Where("id = ? AND author_id = ?", id, user.ID).First(&post).Error; err != nil {
+	if err := config.DB.Preload("Author").Preload("Likes").Preload("Comments").Where("id = ? AND author_id = ?", id, user.ID).First(&post).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed To Fetch My Detail Post", "error": err.Error()})
 	}
 
@@ -131,4 +131,58 @@ func DeletePost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{"message": "Success To Deleted Post"})
+}
+
+func ToggleDisableComment(c echo.Context) error {
+	user := c.Get("user").(model.User)
+	id := c.Param("id")
+
+	var post model.Post
+	if err := config.DB.First(&post, id).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"message": "Post Not Found"})
+	}
+
+	if post.AuthorID != user.ID {
+		return c.JSON(http.StatusForbidden, echo.Map{"message": "You Are Not The Owner"})
+	}
+
+	post.DisableComments = !post.DisableComments
+
+	if err := config.DB.Save(&post).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Disabled Comments Failed", "error": err.Error()})
+	}
+
+	status := "enabled"
+	if post.DisableComments {
+		status = "disabled"
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "Comments " + status + " Successfully"})
+}
+
+func ToggleHideLikes(c echo.Context) error {
+	user := c.Get("user").(model.User)
+	id := c.Param("id")
+
+	var post model.Post
+	if err := config.DB.First(&post, id).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"message": "Post Not Found"})
+	}
+
+	if post.AuthorID != user.ID {
+		return c.JSON(http.StatusForbidden, echo.Map{"message": "You Are Not The Owner"})
+	}
+
+	post.HideLikes = !post.HideLikes
+
+	if err := config.DB.Save(&post).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Hide Likes Failed", "error": err.Error()})
+	}
+
+	status := "visible"
+	if post.HideLikes {
+		status = "hidden"
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "Likes Now " + status})
 }

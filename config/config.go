@@ -31,7 +31,8 @@ func ConnectDB() {
 		&model.User{},
 		&model.Role{},
 		&model.Post{},
-		&model.Comment{})
+		&model.Comment{},
+		&model.Like{})
 	fmt.Println("Success Connect to Database")
 }
 
