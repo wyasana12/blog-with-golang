@@ -17,8 +17,8 @@ type PostResponse struct {
 	Author          AuthorInfo `json:"author"`
 	DisableComments bool       `json:"disable_comments"`
 	HideLikes       bool       `json:"hide_likes"`
-	LikesCount      int        `json:"likes_count"`
-	CommentsCount   int        `json:"comments_count"`
+	LikesCount      *int       `json:"likes_count,omitempty"`
+	CommentsCount   *int       `json:"comments_count,omitempty"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
 }

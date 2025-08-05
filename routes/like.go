@@ -10,4 +10,5 @@ import (
 func LikeRoutes(g *echo.Group) {
 	like := g.Group("/post/:id", middleware.AuthMiddleware)
 	like.PUT("/like", handler.ToggleLike)
+	like.GET("/like", handler.GetAllUsersWhoLike)
 }

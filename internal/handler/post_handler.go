@@ -10,6 +10,19 @@ import (
 )
 
 func mapToPostResponse(post model.Post) dto.PostResponse {
+	var likesCount *int
+	var commentsCount *int
+
+	if !post.HideLikes {
+		count := len(post.Likes)
+		likesCount = &count
+	}
+
+	if !post.DisableComments {
+		count := len(post.Comments)
+		commentsCount = &count
+	}
+
 	return dto.PostResponse{
 		ID:              post.ID,
 		Title:           post.Title,
@@ -17,8 +30,8 @@ func mapToPostResponse(post model.Post) dto.PostResponse {
 		PublishedAt:     post.PublishedAt,
 		DisableComments: post.DisableComments,
 		HideLikes:       post.HideLikes,
-		LikesCount:      len(post.Likes),
-		CommentsCount:   len(post.Comments),
+		LikesCount:      likesCount,
+		CommentsCount:   commentsCount,
 		Author: dto.AuthorInfo{
 			ID:       post.Author.ID,
 			Username: post.Author.Username,
@@ -52,7 +65,7 @@ func GetDetailPublishedPost(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed To Fetch Detail Post", "error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, post)
+	return c.JSON(http.StatusOK, mapToPostResponse(post))
 }
 
 func GetPublishedPostByUsername(c echo.Context) error {
@@ -65,7 +78,7 @@ func GetPublishedPostByUsername(c echo.Context) error {
 
 	var posts []model.Post
 
-	if err := config.DB.Preload("Author").Where("author_id = ? AND status = ?", user.ID, "published").Order("published_at desc").Find(&posts).Error; err != nil {
+	if err := config.DB.Preload("Author").Preload("Likes").Preload("Comments").Where("author_id = ? AND status = ?", user.ID, "published").Order("published_at desc").Find(&posts).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed To Fetch Post", "error": err.Error()})
 	}
 
